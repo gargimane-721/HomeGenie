@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: #111827;
+    background-color: #6B7280;
+  }
+  
+  h1, h2, h3, h4, h5, h6, .font-serif, .font-display, .font-heading, .brand-title {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+    font-weight: 700 !important;
+    font-style: normal !important;
+    letter-spacing: -0.025em;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* 2-Shades Darker Slate-Gray Architectural blueprint & CAD grid styling */
+.blueprint-grid-natural {
+  background-color: #FFFFFF;
+  background-image: radial-gradient(rgba(17, 24, 39, 0.14) 1.2px, transparent 1.2px),
+                    linear-gradient(to right, rgba(17, 24, 39, 0.05) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(17, 24, 39, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px, 24px 24px, 24px 24px;
+}
+
+.blueprint-grid-dark {
+  background-color: #1E293B;
+  background-image: radial-gradient(rgba(209, 213, 219, 0.25) 1px, transparent 1px),
+                    linear-gradient(to right, rgba(209, 213, 219, 0.06) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(209, 213, 219, 0.06) 1px, transparent 1px);
+  background-size: 24px 24px, 24px 24px, 24px 24px;
+}
+
+.blueprint-grid-light {
+  background-color: #F9FAFB;
+  background-image: radial-gradient(rgba(17, 24, 39, 0.12) 1.2px, transparent 1.2px),
+                    linear-gradient(to right, rgba(17, 24, 39, 0.04) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(17, 24, 39, 0.04) 1px, transparent 1px);
+  background-size: 20px 20px, 20px 20px, 20px 20px;
+}
+
+.cad-canvas-grid {
+  background-color: #FFFFFF;
+  background-image: radial-gradient(rgba(17, 24, 39, 0.15) 1.2px, transparent 1.2px),
+                    linear-gradient(to right, rgba(17, 24, 39, 0.06) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(17, 24, 39, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px, 10px 10px, 10px 10px;
+}
+
+/* Custom scrollbar in dark slate contrast */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #D1D5DB;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #6B7280;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}

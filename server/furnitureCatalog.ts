@@ -1,0 +1,133 @@
+export interface FurnitureDefinition {
+  id: string;
+  category: 'bed' | 'sofa' | 'dining' | 'wardrobe' | 'tv_unit' | 'kitchen_counter' | 'mandir' | 'sanitary' | 'car' | 'plant' | 'study_desk';
+  name: string;
+  defaultWidth: number; // in feet
+  defaultHeight: number; // in feet
+  clearanceRequired: number; // in feet around it
+  approxPrice: number;
+  suitableRooms: string[];
+}
+
+export const FURNITURE_CATALOG: FurnitureDefinition[] = [
+  {
+    id: 'furn_king_bed',
+    category: 'bed',
+    name: 'King Size Bed with Side Tables',
+    defaultWidth: 6.5,
+    defaultHeight: 7.0,
+    clearanceRequired: 2.5,
+    approxPrice: 42000,
+    suitableRooms: ['master_bedroom', 'bedroom'],
+  },
+  {
+    id: 'furn_queen_bed',
+    category: 'bed',
+    name: 'Queen Size Bed with Nightstand',
+    defaultWidth: 5.5,
+    defaultHeight: 6.5,
+    clearanceRequired: 2.0,
+    approxPrice: 32000,
+    suitableRooms: ['bedroom'],
+  },
+  {
+    id: 'furn_l_sofa',
+    category: 'sofa',
+    name: 'L-Shaped 6-Seater Sectional Sofa',
+    defaultWidth: 8.0,
+    defaultHeight: 6.0,
+    clearanceRequired: 3.0,
+    approxPrice: 58000,
+    suitableRooms: ['living'],
+  },
+  {
+    id: 'furn_3_sofa',
+    category: 'sofa',
+    name: '3-Seater Linear Sofa + Accent Chairs',
+    defaultWidth: 7.0,
+    defaultHeight: 3.5,
+    clearanceRequired: 2.5,
+    approxPrice: 38000,
+    suitableRooms: ['living'],
+  },
+  {
+    id: 'furn_dining_6',
+    category: 'dining',
+    name: '6-Seater Solid Oak Dining Table',
+    defaultWidth: 6.0,
+    defaultHeight: 3.5,
+    clearanceRequired: 3.0,
+    approxPrice: 45000,
+    suitableRooms: ['dining', 'living'],
+  },
+  {
+    id: 'furn_dining_4',
+    category: 'dining',
+    name: '4-Seater Compact Dining Table',
+    defaultWidth: 4.5,
+    defaultHeight: 3.0,
+    clearanceRequired: 2.5,
+    approxPrice: 28000,
+    suitableRooms: ['dining'],
+  },
+  {
+    id: 'furn_wardrobe_3',
+    category: 'wardrobe',
+    name: '3-Door Sliding Wardrobe with Lofts',
+    defaultWidth: 7.0,
+    defaultHeight: 2.0,
+    clearanceRequired: 2.5,
+    approxPrice: 48000,
+    suitableRooms: ['master_bedroom', 'bedroom'],
+  },
+  {
+    id: 'furn_wardrobe_2',
+    category: 'wardrobe',
+    name: '2-Door Built-in Wardrobe',
+    defaultWidth: 4.5,
+    defaultHeight: 2.0,
+    clearanceRequired: 2.0,
+    approxPrice: 32000,
+    suitableRooms: ['bedroom'],
+  },
+  {
+    id: 'furn_tv_unit',
+    category: 'tv_unit',
+    name: 'Floating Media Console with Paneling',
+    defaultWidth: 6.5,
+    defaultHeight: 1.5,
+    clearanceRequired: 3.0,
+    approxPrice: 24000,
+    suitableRooms: ['living', 'master_bedroom'],
+  },
+  {
+    id: 'furn_mandir',
+    category: 'mandir',
+    name: 'Teakwood CNC Carved Mandir Altar',
+    defaultWidth: 3.5,
+    defaultHeight: 2.0,
+    clearanceRequired: 2.0,
+    approxPrice: 22000,
+    suitableRooms: ['pooja', 'living'],
+  },
+  {
+    id: 'furn_study',
+    category: 'study_desk',
+    name: 'Executive Ergonomic Study Desk & Shelving',
+    defaultWidth: 4.5,
+    defaultHeight: 2.2,
+    clearanceRequired: 2.5,
+    approxPrice: 26000,
+    suitableRooms: ['study', 'bedroom'],
+  },
+  {
+    id: 'furn_car_sedan',
+    category: 'car',
+    name: 'Sedan / SUV Parking Bay',
+    defaultWidth: 9.0,
+    defaultHeight: 16.0,
+    clearanceRequired: 2.0,
+    approxPrice: 0,
+    suitableRooms: ['parking'],
+  },
+];

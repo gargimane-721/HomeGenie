@@ -1,0 +1,7 @@
+{
+  "name": "HomeGenie - AI House Planner & Architectural CAD",
+  "description": "Intelligent AI-powered residential house planning, 2D/3D CAD visualization, Vastu analysis, material intelligence, and budget estimation platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
