@@ -1,11 +1,13 @@
 import React from 'react';
 import { Compass, ShieldCheck, AlertCircle } from 'lucide-react';
+import { HomeGenieLogo } from './HomeGenieLogo';
 
 interface FooterProps {
   onNavigate: (view: 'home' | 'dashboard' | 'workspace' | 'materials' | 'wizard') => void;
+  onReplayIntro?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
+export const Footer: React.FC<FooterProps> = ({ onNavigate, onReplayIntro }) => {
   return (
     <footer className="w-full border-t border-gray-200 bg-white text-gray-900">
       {/* Important Legal Disclaimer Banner */}
@@ -27,8 +29,8 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           {/* Brand Col */}
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gray-900 flex items-center justify-center rounded-lg text-white">
-                <div className="w-4 h-4 border-2 border-white rotate-45"></div>
+              <div className="flex items-center justify-center p-1 rounded-lg bg-gray-100 border border-gray-300">
+                <HomeGenieLogo variant="icon" size={30} color="#4B5563" />
               </div>
               <span className="text-2xl font-bold tracking-tight text-gray-900 font-heading">HomeGenie</span>
             </div>
@@ -106,6 +108,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <li className="hover:text-black transition-colors">Scalable SVG Vectors</li>
               <li className="hover:text-black transition-colors">IS 456 Bylaw Compliance</li>
               <li className="hover:text-black transition-colors">BOQ Financial Feasibility</li>
+              {onReplayIntro && (
+                <li>
+                  <button onClick={onReplayIntro} className="text-gray-900 hover:text-black transition-colors flex items-center gap-1 font-semibold underline underline-offset-2">
+                    ▶ Play Start Intro Animation
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
         </div>

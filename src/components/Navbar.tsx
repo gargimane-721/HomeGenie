@@ -1,6 +1,7 @@
 import React from 'react';
-import { Compass, PlusCircle, LayoutDashboard, User as UserIcon, Home, Layers, IndianRupee, Cpu, Sparkles } from 'lucide-react';
+import { Compass, PlusCircle, LayoutDashboard, User as UserIcon, Home, Layers, IndianRupee, Cpu, Sparkles, Play } from 'lucide-react';
 import { User } from '../types';
+import { HomeGenieLogo } from './HomeGenieLogo';
 
 interface NavbarProps {
   currentView: 'home' | 'dashboard' | 'workspace' | 'materials' | 'smarthome';
@@ -9,6 +10,7 @@ interface NavbarProps {
   onOpenAuth: () => void;
   onOpenProfile: () => void;
   onStartNewPlan: () => void;
+  onReplayIntro?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -18,27 +20,27 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuth,
   onOpenProfile,
   onStartNewPlan,
+  onReplayIntro,
 }) => {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-gray-200/80 bg-white/90 backdrop-blur-md transition-all shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-8 lg:px-12">
-        {/* Brand Logo & Title */}
+        {/* Brand Logo in Gray Color & Title */}
         <div className="flex items-center gap-10">
           <button
             onClick={() => onNavigate('home')}
-            className="group flex items-center gap-3.5 text-left transition-opacity hover:opacity-90"
+            className="group flex items-center gap-3 text-left transition-opacity hover:opacity-90"
             id="nav-brand-logo"
           >
-            <div className="w-9 h-9 bg-gray-900 border border-gray-800 flex items-center justify-center rounded-xl shadow-sm">
-              <div className="w-4 h-4 border-2 border-white rotate-45 flex items-center justify-center">
-                <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-              </div>
+            {/* Gray Vector Logo Mark */}
+            <div className="flex items-center justify-center p-1.5 rounded-xl bg-gray-100/90 border border-gray-300 shadow-sm group-hover:border-gray-400 transition-colors">
+              <HomeGenieLogo variant="icon" size={34} color="#4B5563" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold tracking-tight text-gray-900 font-heading">HomeGenie</span>
+                <span className="text-2xl font-bold tracking-tight text-gray-800 font-heading">HomeGenie</span>
               </div>
-              <p className="text-[10px] uppercase tracking-widest text-gray-900 font-bold">AI-Powered Architectural & Smart Home Engine</p>
+              <p className="text-[10px] uppercase tracking-widest text-gray-600 font-bold">AI-Powered Architectural & Smart Home Engine</p>
             </div>
           </button>
 
@@ -112,7 +114,19 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {onReplayIntro && (
+            <button
+              onClick={onReplayIntro}
+              className="hidden lg:flex items-center gap-1.5 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm transition-colors"
+              title="Replay Brand Intro Animation"
+              id="nav-btn-replay-intro"
+            >
+              <Play className="h-3.5 w-3.5 text-gray-600 fill-gray-500" />
+              <span>Intro</span>
+            </button>
+          )}
+
           <button
             onClick={onStartNewPlan}
             className="flex items-center gap-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow-sm transition-all active:scale-95"

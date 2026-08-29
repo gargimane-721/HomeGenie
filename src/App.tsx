@@ -10,10 +10,14 @@ import { CreateProjectWizard } from './components/CreateProjectWizard';
 import { AuthModal } from './components/AuthModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { BackgroundAnimation } from './components/BackgroundAnimation';
+import { IntroLogoAnimation } from './components/IntroLogoAnimation';
 import { Project, User } from './types';
 import { api } from './services/api';
 
 export default function App() {
+  // Website Start Logo Animation state
+  const [showIntro, setShowIntro] = useState<boolean>(true);
+
   // Navigation View State
   const [currentView, setCurrentView] = useState<'home' | 'dashboard' | 'workspace' | 'materials' | 'smarthome'>('home');
 
@@ -107,6 +111,11 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen bg-[#D1D5DB] text-[#111827] flex flex-col font-sans selection:bg-[#374151] selection:text-white overflow-x-hidden">
+      {/* Website Start Logo & Tagline Animation */}
+      {showIntro && (
+        <IntroLogoAnimation onComplete={() => setShowIntro(false)} />
+      )}
+
       {/* Interactive & Ambient Animated Celestial Background */}
       <BackgroundAnimation />
 
@@ -122,6 +131,7 @@ export default function App() {
           }
         }}
         onStartNewPlan={() => handleStartNewPlan()}
+        onReplayIntro={() => setShowIntro(true)}
         user={currentUser}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onOpenProfile={() => setIsProfileModalOpen(true)}
@@ -190,6 +200,7 @@ export default function App() {
           if (view === 'wizard') handleStartNewPlan();
           else setCurrentView(view);
         }}
+        onReplayIntro={() => setShowIntro(true)}
       />
 
       {/* Create House Plan Wizard Modal */}
