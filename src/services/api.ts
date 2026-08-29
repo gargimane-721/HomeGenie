@@ -150,4 +150,198 @@ export const api = {
     });
     return res.json();
   },
+
+  // ==========================================
+  // SMART HOME, APPLIANCE & AI MANAGEMENT APIS
+  // ==========================================
+
+  async getHomes(): Promise<any[]> {
+    const res = await fetch('/api/homes');
+    return res.json();
+  },
+
+  async getHome(id: string): Promise<any> {
+    const res = await fetch(`/api/homes/${id}`);
+    return res.json();
+  },
+
+  async createHome(data: any): Promise<any> {
+    const res = await fetch('/api/homes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  },
+
+  async updateHome(id: string, updates: any): Promise<any> {
+    const res = await fetch(`/api/homes/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    return res.json();
+  },
+
+  async deleteHome(id: string): Promise<{ success: boolean }> {
+    const res = await fetch(`/api/homes/${id}`, { method: 'DELETE' });
+    return res.json();
+  },
+
+  // Rooms
+  async getRooms(homeId: string): Promise<any[]> {
+    const res = await fetch(`/api/rooms?home_id=${encodeURIComponent(homeId)}`);
+    return res.json();
+  },
+
+  async createRoom(data: { home_id: string; name: string; room_type?: string; floor?: string; description?: string }): Promise<any> {
+    const res = await fetch('/api/rooms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  },
+
+  async deleteRoom(id: string): Promise<{ success: boolean }> {
+    const res = await fetch(`/api/rooms/${id}`, { method: 'DELETE' });
+    return res.json();
+  },
+
+  // Appliances
+  async getAppliances(homeId?: string): Promise<any[]> {
+    const url = homeId ? `/api/appliances?home_id=${encodeURIComponent(homeId)}` : '/api/appliances';
+    const res = await fetch(url);
+    return res.json();
+  },
+
+  async getAppliance(id: string): Promise<any> {
+    const res = await fetch(`/api/appliances/${id}`);
+    return res.json();
+  },
+
+  async createAppliance(data: any): Promise<any> {
+    const res = await fetch('/api/appliances', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  },
+
+  async updateAppliance(id: string, updates: any): Promise<any> {
+    const res = await fetch(`/api/appliances/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    return res.json();
+  },
+
+  async deleteAppliance(id: string): Promise<{ success: boolean }> {
+    const res = await fetch(`/api/appliances/${id}`, { method: 'DELETE' });
+    return res.json();
+  },
+
+  // Maintenance Tasks
+  async getMaintenanceTasks(homeId?: string): Promise<any[]> {
+    const url = homeId ? `/api/maintenance?home_id=${encodeURIComponent(homeId)}` : '/api/maintenance';
+    const res = await fetch(url);
+    return res.json();
+  },
+
+  async createMaintenanceTask(data: any): Promise<any> {
+    const res = await fetch('/api/maintenance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  },
+
+  async completeMaintenanceTask(id: string, homeId?: string): Promise<any> {
+    const res = await fetch(`/api/maintenance/${id}/complete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ home_id: homeId }),
+    });
+    return res.json();
+  },
+
+  async deleteMaintenanceTask(id: string): Promise<{ success: boolean }> {
+    const res = await fetch(`/api/maintenance/${id}`, { method: 'DELETE' });
+    return res.json();
+  },
+
+  // Energy
+  async getEnergyRecords(homeId?: string): Promise<any[]> {
+    const url = homeId ? `/api/energy?home_id=${encodeURIComponent(homeId)}` : '/api/energy';
+    const res = await fetch(url);
+    return res.json();
+  },
+
+  async logEnergyConsumption(data: { home_id: string; energy_consumption: number; appliance_name?: string }): Promise<any> {
+    const res = await fetch('/api/energy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  },
+
+  // Recommendations
+  async getAiRecommendations(homeId?: string): Promise<any[]> {
+    const url = homeId ? `/api/ai/recommendations?home_id=${encodeURIComponent(homeId)}` : '/api/ai/recommendations';
+    const res = await fetch(url);
+    return res.json();
+  },
+
+  async updateRecommendationStatus(id: string, status: 'completed' | 'dismissed'): Promise<any> {
+    const res = await fetch(`/api/ai/recommendations/${id}/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    return res.json();
+  },
+
+  // Home Genie AI Chat
+  async sendHomeGenieMessage(data: { message: string; home_id?: string; conversation_id?: string }): Promise<{
+    reply: string;
+    suggestedActions?: string[];
+    messageId: string;
+    conversationId: string;
+  }> {
+    const res = await fetch('/api/ai/home-chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return res.json();
+  },
+
+  // Vision Scan
+  async scanApplianceImage(imageBase64: string, mimeType: string = 'image/jpeg'): Promise<{
+    category: string;
+    brand: string;
+    model: string;
+    status_assessment: string;
+    maintenance_advice: string;
+    confidence: number;
+    error_codes: string[];
+  }> {
+    const res = await fetch('/api/ai/vision-scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64, mimeType }),
+    });
+    return res.json();
+  },
+
+  // Dashboard Stats
+  async getDashboardStats(homeId?: string): Promise<any> {
+    const url = homeId ? `/api/stats/dashboard?home_id=${encodeURIComponent(homeId)}` : '/api/stats/dashboard';
+    const res = await fetch(url);
+    return res.json();
+  },
 };

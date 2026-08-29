@@ -354,3 +354,183 @@ export interface Project {
   selectedAlternative?: string;
   alternatives?: ProjectAlternative[];
 }
+
+// =======================================================
+// SMART HOME MANAGEMENT & APPLIANCE TYPES (SUPABASE SCHEMA)
+// =======================================================
+
+export interface Profile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  phone?: string | null;
+  timezone?: string;
+  preferences?: {
+    theme?: 'light' | 'dark' | 'system';
+    unit?: 'sqft' | 'sqm';
+    currency?: 'INR' | 'USD';
+    vastu?: boolean;
+    sustainability?: boolean;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Home {
+  id: string;
+  user_id: string;
+  name: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postal_code?: string;
+  home_type?: string;
+  description?: string;
+  plot_width?: number;
+  plot_length?: number;
+  plot_area?: number;
+  created_at: string;
+  updated_at: string;
+  rooms?: HomeRoom[];
+  appliances?: Appliance[];
+}
+
+export interface HomeRoom {
+  id: string;
+  home_id: string;
+  name: string;
+  room_type: string;
+  floor?: string;
+  description?: string;
+  image_url?: string;
+  created_at: string;
+  updated_at: string;
+  appliances_count?: number;
+}
+
+export type ApplianceStatus = 'active' | 'needs_maintenance' | 'in_repair' | 'inactive';
+export type WarrantyStatus = 'active' | 'expiring_soon' | 'expired' | 'unknown';
+
+export interface Appliance {
+  id: string;
+  home_id: string;
+  room_id?: string | null;
+  room_name?: string;
+  name: string;
+  category: string;
+  brand?: string;
+  model?: string;
+  serial_number?: string;
+  purchase_date?: string;
+  warranty_expiry?: string;
+  status: ApplianceStatus;
+  energy_rating?: string;
+  power_consumption?: number; // in Watts
+  notes?: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+  images?: ApplianceImage[];
+  maintenance_tasks?: MaintenanceTask[];
+  warranty_status?: WarrantyStatus;
+}
+
+export interface ApplianceImage {
+  id: string;
+  appliance_id: string;
+  user_id: string;
+  storage_path: string;
+  public_url?: string;
+  caption?: string;
+  ai_analysis?: {
+    category?: string;
+    brand?: string;
+    model?: string;
+    status_assessment?: string;
+    maintenance_advice?: string;
+    confidence?: number;
+    error_codes?: string[];
+  };
+  created_at: string;
+}
+
+export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
+export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+
+export interface MaintenanceTask {
+  id: string;
+  appliance_id?: string | null;
+  appliance_name?: string;
+  home_id: string;
+  user_id: string;
+  title: string;
+  description?: string;
+  priority: TaskPriority;
+  status: TaskStatus;
+  due_date?: string;
+  completed_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AIConversation {
+  id: string;
+  user_id: string;
+  home_id?: string | null;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  messages_count?: number;
+}
+
+export interface AIMessage {
+  id: string;
+  conversation_id: string;
+  user_id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  metadata?: {
+    suggestedActions?: string[];
+    referencedAppliances?: string[];
+    technicalContext?: string;
+  };
+  created_at: string;
+}
+
+export interface AIRecommendation {
+  id: string;
+  user_id: string;
+  home_id?: string | null;
+  category: 'Energy' | 'Maintenance' | 'Warranty' | 'Safety' | 'General';
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high';
+  status: 'new' | 'viewed' | 'completed' | 'dismissed';
+  metadata?: Record<string, any>;
+  created_at: string;
+}
+
+export interface EnergyRecord {
+  id: string;
+  user_id: string;
+  home_id: string;
+  appliance_id?: string | null;
+  appliance_name?: string;
+  recorded_at: string;
+  energy_consumption: number; // in kWh
+  unit: string;
+  metadata?: Record<string, any>;
+}
+
+export interface HomeDashboardStats {
+  totalHomes: number;
+  totalRooms: number;
+  totalAppliances: number;
+  pendingTasksCount: number;
+  activeWarrantiesCount: number;
+  expiringWarrantiesCount: number;
+  monthlyEstimatedKwh: number;
+  recommendationsCount: number;
+}
+

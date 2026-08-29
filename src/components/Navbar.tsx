@@ -1,10 +1,10 @@
 import React from 'react';
-import { Compass, PlusCircle, LayoutDashboard, User as UserIcon, Home, Layers, IndianRupee } from 'lucide-react';
+import { Compass, PlusCircle, LayoutDashboard, User as UserIcon, Home, Layers, IndianRupee, Cpu, Sparkles } from 'lucide-react';
 import { User } from '../types';
 
 interface NavbarProps {
-  currentView: 'home' | 'dashboard' | 'workspace' | 'materials';
-  onNavigate: (view: 'home' | 'dashboard' | 'workspace' | 'materials' | 'wizard') => void;
+  currentView: 'home' | 'dashboard' | 'workspace' | 'materials' | 'smarthome';
+  onNavigate: (view: 'home' | 'dashboard' | 'workspace' | 'materials' | 'smarthome' | 'wizard') => void;
   user: User | null;
   onOpenAuth: () => void;
   onOpenProfile: () => void;
@@ -38,21 +38,21 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold tracking-tight text-gray-900 font-heading">HomeGenie</span>
                 <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-900 border border-gray-300">
-                  AI CAD
+                  AI Architecture
                 </span>
               </div>
-              <p className="text-[10px] uppercase tracking-widest text-gray-900 font-bold">Architectural & Vastu Engine</p>
+              <p className="text-[10px] uppercase tracking-widest text-gray-900 font-bold">Architectural & Smart Home Engine</p>
             </div>
           </button>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 text-xs uppercase tracking-widest font-bold">
+          <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-xs uppercase tracking-widest font-bold">
             <button
               onClick={() => onNavigate('home')}
-              className={`flex items-center gap-2 py-1 transition-all ${
+              className={`flex items-center gap-1.5 py-1 transition-all ${
                 currentView === 'home'
                   ? 'border-b-2 border-gray-900 text-gray-900 font-bold'
-                  : 'text-gray-900 hover:text-black'
+                  : 'text-gray-700 hover:text-black'
               }`}
               id="nav-link-home"
             >
@@ -61,11 +61,24 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             <button
+              onClick={() => onNavigate('smarthome')}
+              className={`flex items-center gap-1.5 py-1 transition-all ${
+                currentView === 'smarthome'
+                  ? 'border-b-2 border-gray-900 text-gray-900 font-bold'
+                  : 'text-gray-700 hover:text-black'
+              }`}
+              id="nav-link-smarthome"
+            >
+              <Cpu className="h-4 w-4 text-gray-900" />
+              <span>Smart Home</span>
+            </button>
+
+            <button
               onClick={() => onNavigate('dashboard')}
-              className={`flex items-center gap-2 py-1 transition-all ${
+              className={`flex items-center gap-1.5 py-1 transition-all ${
                 currentView === 'dashboard'
                   ? 'border-b-2 border-gray-900 text-gray-900 font-bold'
-                  : 'text-gray-900 hover:text-black'
+                  : 'text-gray-700 hover:text-black'
               }`}
               id="nav-link-dashboard"
             >
@@ -75,10 +88,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => onNavigate('workspace')}
-              className={`flex items-center gap-2 py-1 transition-all ${
+              className={`flex items-center gap-1.5 py-1 transition-all ${
                 currentView === 'workspace'
                   ? 'border-b-2 border-gray-900 text-gray-900 font-bold'
-                  : 'text-gray-900 hover:text-black'
+                  : 'text-gray-700 hover:text-black'
               }`}
               id="nav-link-workspace"
             >
@@ -88,10 +101,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={() => onNavigate('materials')}
-              className={`flex items-center gap-2 py-1 transition-all ${
+              className={`flex items-center gap-1.5 py-1 transition-all ${
                 currentView === 'materials'
                   ? 'border-b-2 border-gray-900 text-gray-900 font-bold'
-                  : 'text-gray-900 hover:text-black'
+                  : 'text-gray-700 hover:text-black'
               }`}
               id="nav-link-materials"
             >

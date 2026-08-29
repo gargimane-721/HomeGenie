@@ -6,8 +6,23 @@ import { generateArchitecturalDesign } from './server/designEngine';
 import { analyzeProjectVastu } from './server/vastuEngine';
 import { calculateConstructionBudget } from './server/budgetEngine';
 import { FURNITURE_CATALOG } from './server/furnitureCatalog';
-import { processAiPlanModification } from './server/geminiService';
-import { Project, User } from './src/types';
+import {
+  processAiPlanModification,
+  processHomeGenieChat,
+  processApplianceImageAnalysis,
+} from './server/geminiService';
+import {
+  Project,
+  User,
+  Home,
+  HomeRoom,
+  Appliance,
+  MaintenanceTask,
+  AIRecommendation,
+  EnergyRecord,
+  AIConversation,
+  AIMessage,
+} from './src/types';
 
 async function startServer() {
   const app = express();
@@ -341,6 +356,464 @@ async function startServer() {
     project.versions = [...(project.versions || []), newVersion];
     db.saveProject(project);
     res.json(newVersion);
+  });
+
+  // Restore project version
+  app.post('/api/projects/:id/restore', (req: Request, res: Response) => {
+    const project = db.getProjectById(req.params.id);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    const { versionNumber } = req.body;
+    const targetVersion = project.versions?.find((v) => v.versionNumber === versionNumber);
+    if (!targetVersion) return res.status(404).json({ error: 'Version not found' });
+
+    if (targetVersion.designData?.floors) {
+      project.floors = targetVersion.designData.floors;
+    }
+    project.updatedAt = new Date().toISOString();
+    db.saveProject(project);
+    res.json(project);
+  });
+
+  // --- ADDITIONAL SPECIFIED AI AGENT APIS ---
+  app.post('/api/ai/chat', async (req: Request, res: Response) => {
+    const { message, project } = req.body;
+    if (!message) return res.status(400).json({ error: 'Message is required' });
+    const result = await processAiPlanModification({ userMessage: message, project });
+    res.json({
+      reply: result.reply,
+      suggestedAction: result.suggestedAction,
+      targetRoomName: result.targetRoomName,
+      areaDeltaSqFt: result.areaDeltaSqFt,
+      costDeltaInr: result.costDeltaInr,
+      technicalAnalysis: result.technicalAnalysis,
+    });
+  });
+
+  app.post('/api/ai/floor-plan', (req: Request, res: Response) => {
+    const { plot, requirements, budget, style, floorsCount, family, preferences } = req.body;
+    const design = generateArchitecturalDesign({
+      plot: plot || { width: 30, length: 40, unit: 'ft', totalArea: 1200, roadDirection: 'North' },
+      family: family || { totalMembers: 4, adults: 2, children: 1, elderly: 1, frequentGuests: true },
+      requirements: requirements || { bedrooms: 3, bathrooms: 3, kitchen: true, livingRoom: true, diningRoom: true, balconies: 2 },
+      budget: budget || { totalBudget: 3500000 },
+      style: style || 'Modern',
+      preferences: preferences || { vastuPriority: 'High', naturalLighting: 'Maximized', crossVentilation: 'Maximized', privacyLevel: 'High', accessibilityForElderly: true, futureExpansionReady: true },
+      floorsCount: floorsCount || 2,
+    });
+    res.json(design);
+  });
+
+  app.post('/api/ai/sustainability', (req: Request, res: Response) => {
+    const { plot, floors, location } = req.body;
+    const report = {
+      energyScore: 84,
+      ventilationScore: 89,
+      lightingScore: 92,
+      waterScore: 78,
+      solarScore: 91,
+      materialScore: 86,
+      overallScore: 87,
+      solarRoofAreaSqft: Math.round((plot?.width || 30) * (plot?.length || 40) * 0.7),
+      annualSolarGenerationKwh: 4800,
+      annualRainwaterHarvestingLiters: 92000,
+      recommendations: [
+        'Install 4.5 kW rooftop solar PV system for 85% electricity offset.',
+        'Rainwater harvesting storage sump with dual recharge ground pits.',
+        'Fly-ash AAC masonry blocks with double glazed UPVC windows.',
+        'Optimal North-East orientation for natural daylighting.',
+      ],
+    };
+    res.json(report);
+  });
+
+  app.post('/api/ai/boq', (req: Request, res: Response) => {
+    const { totalBuiltUpArea, tier } = req.body;
+    const area = totalBuiltUpArea || 2200;
+    const boq = [
+      { category: 'Civil & Structure', material: 'Cement (OPC/PPC 53 Grade)', quantity: Math.round(area * 0.4), unit: 'Bags', rate: 410, estimatedCost: Math.round(area * 0.4 * 410) },
+      { category: 'Civil & Structure', material: 'Fe550D TMT Steel Rebars', quantity: Number((area * 0.0038).toFixed(2)), unit: 'MT', rate: 68000, estimatedCost: Math.round(area * 0.0038 * 68000) },
+      { category: 'Civil & Structure', material: 'AAC Masonry Blocks (6")', quantity: Math.round(area * 1.8), unit: 'Nos', rate: 72, estimatedCost: Math.round(area * 1.8 * 72) },
+      { category: 'Flooring', material: 'Vitrified Glazed Tiles (4x2 ft)', quantity: Math.round(area * 0.85), unit: 'Sq.Ft', rate: 95, estimatedCost: Math.round(area * 0.85 * 95) },
+      { category: 'Electrical', material: 'FRLS Copper Wiring & MCBs', quantity: 1, unit: 'Lot', rate: Math.round(area * 140), estimatedCost: Math.round(area * 140) },
+      { category: 'Plumbing', material: 'CPVC/SWR Pipes & Sanitaryware', quantity: 1, unit: 'Lot', rate: Math.round(area * 120), estimatedCost: Math.round(area * 120) },
+      { category: 'Doors & Windows', material: 'Teak Main Door & UPVC Windows', quantity: 1, unit: 'Lot', rate: Math.round(area * 165), estimatedCost: Math.round(area * 165) },
+    ];
+    const totalCost = boq.reduce((acc, item) => acc + item.estimatedCost, 0);
+    res.json({ items: boq, totalCost, currency: 'INR' });
+  });
+
+  // =========================================================
+  // SMART HOME, APPLIANCE & MAINTENANCE API ENDPOINTS
+  // =========================================================
+
+  // --- HOMES ---
+  app.get('/api/homes', (req: Request, res: Response) => {
+    const userId = req.query.userId as string | undefined;
+    const homes = db.getHomes(userId);
+    res.json(homes);
+  });
+
+  app.post('/api/homes', (req: Request, res: Response) => {
+    const { name, address, city, state, country, postal_code, home_type, description, plot_width, plot_length, user_id } = req.body;
+    if (!name) return res.status(400).json({ error: 'Home name is required' });
+
+    const newHome: Home = {
+      id: `home_${Date.now()}`,
+      user_id: user_id || 'usr_demo_1',
+      name,
+      address: address || '',
+      city: city || 'Bengaluru',
+      state: state || 'Karnataka',
+      country: country || 'India',
+      postal_code: postal_code || '',
+      home_type: home_type || 'Independent Villa',
+      description: description || '',
+      plot_width: plot_width ? Number(plot_width) : 30,
+      plot_length: plot_length ? Number(plot_length) : 50,
+      plot_area: (plot_width && plot_length) ? Number(plot_width) * Number(plot_length) : 1500,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const saved = db.saveHome(newHome);
+
+    // Auto-create initial default rooms for smooth onboarding
+    const defaultRooms = [
+      { name: 'Living Room', room_type: 'living_room', floor: 'Ground Floor' },
+      { name: 'Modular Kitchen', room_type: 'kitchen', floor: 'Ground Floor' },
+      { name: 'Master Bedroom', room_type: 'bedroom', floor: 'First Floor' },
+    ];
+    defaultRooms.forEach((dr) => {
+      db.saveRoom({
+        id: `room_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        home_id: saved.id,
+        name: dr.name,
+        room_type: dr.room_type,
+        floor: dr.floor,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    });
+
+    res.status(201).json(db.getHomeById(saved.id));
+  });
+
+  app.get('/api/homes/:id', (req: Request, res: Response) => {
+    const home = db.getHomeById(req.params.id);
+    if (!home) return res.status(404).json({ error: 'Home not found' });
+    res.json(home);
+  });
+
+  app.patch('/api/homes/:id', (req: Request, res: Response) => {
+    const existing = db.getHomeById(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Home not found' });
+    const updated = db.saveHome({ ...existing, ...req.body });
+    res.json(updated);
+  });
+
+  app.delete('/api/homes/:id', (req: Request, res: Response) => {
+    const deleted = db.deleteHome(req.params.id);
+    if (!deleted) return res.status(404).json({ error: 'Home not found' });
+    res.json({ success: true, message: 'Home deleted successfully' });
+  });
+
+  // --- ROOMS ---
+  app.get('/api/rooms', (req: Request, res: Response) => {
+    const homeId = (req.query.home_id || req.query.homeId) as string;
+    if (!homeId) return res.status(400).json({ error: 'home_id query parameter is required' });
+    res.json(db.getRoomsByHome(homeId));
+  });
+
+  app.post('/api/rooms', (req: Request, res: Response) => {
+    const { home_id, name, room_type, floor, description } = req.body;
+    if (!home_id || !name) return res.status(400).json({ error: 'home_id and name are required' });
+
+    const newRoom: HomeRoom = {
+      id: `room_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      home_id,
+      name,
+      room_type: room_type || 'other',
+      floor: floor || 'Ground Floor',
+      description: description || '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    const saved = db.saveRoom(newRoom);
+    res.status(201).json(saved);
+  });
+
+  app.patch('/api/rooms/:id', (req: Request, res: Response) => {
+    const room = db.getRoomsByHome(req.body.home_id || '').find((r) => r.id === req.params.id);
+    if (!room) return res.status(404).json({ error: 'Room not found' });
+    const updated = db.saveRoom({ ...room, ...req.body });
+    res.json(updated);
+  });
+
+  app.delete('/api/rooms/:id', (req: Request, res: Response) => {
+    const deleted = db.deleteRoom(req.params.id);
+    res.json({ success: deleted });
+  });
+
+  // --- APPLIANCES ---
+  app.get('/api/appliances', (req: Request, res: Response) => {
+    const homeId = (req.query.home_id || req.query.homeId) as string;
+    if (!homeId) {
+      // return all appliances across first home if none provided
+      const firstHome = db.getHomes()[0];
+      if (firstHome) return res.json(db.getAppliancesByHome(firstHome.id));
+      return res.json([]);
+    }
+    res.json(db.getAppliancesByHome(homeId));
+  });
+
+  app.get('/api/appliances/:id', (req: Request, res: Response) => {
+    const appliance = db.getApplianceById(req.params.id);
+    if (!appliance) return res.status(404).json({ error: 'Appliance not found' });
+    res.json(appliance);
+  });
+
+  app.post('/api/appliances', (req: Request, res: Response) => {
+    const { home_id, room_id, name, category, brand, model, serial_number, purchase_date, warranty_expiry, energy_rating, power_consumption, notes } = req.body;
+    if (!home_id || !name || !category) {
+      return res.status(400).json({ error: 'home_id, name and category are required' });
+    }
+
+    const newAppliance: Appliance = {
+      id: `app_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      home_id,
+      room_id: room_id || null,
+      name,
+      category,
+      brand: brand || '',
+      model: model || '',
+      serial_number: serial_number || '',
+      purchase_date: purchase_date || new Date().toISOString().split('T')[0],
+      warranty_expiry: warranty_expiry || '',
+      status: 'active',
+      energy_rating: energy_rating || '3-Star',
+      power_consumption: power_consumption ? Number(power_consumption) : 500,
+      notes: notes || '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const saved = db.saveAppliance(newAppliance);
+    res.status(201).json(saved);
+  });
+
+  app.patch('/api/appliances/:id', (req: Request, res: Response) => {
+    const existing = db.getApplianceById(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Appliance not found' });
+    const updated = db.saveAppliance({ ...existing, ...req.body });
+    res.json(updated);
+  });
+
+  app.delete('/api/appliances/:id', (req: Request, res: Response) => {
+    const deleted = db.deleteAppliance(req.params.id);
+    res.json({ success: deleted });
+  });
+
+  // --- MAINTENANCE TASKS ---
+  app.get('/api/maintenance', (req: Request, res: Response) => {
+    const homeId = (req.query.home_id || req.query.homeId) as string;
+    if (!homeId) {
+      const firstHome = db.getHomes()[0];
+      if (firstHome) return res.json(db.getMaintenanceTasksByHome(firstHome.id));
+      return res.json([]);
+    }
+    res.json(db.getMaintenanceTasksByHome(homeId));
+  });
+
+  app.post('/api/maintenance', (req: Request, res: Response) => {
+    const { home_id, appliance_id, title, description, priority, due_date, user_id } = req.body;
+    if (!home_id || !title) {
+      return res.status(400).json({ error: 'home_id and title are required' });
+    }
+
+    const newTask: MaintenanceTask = {
+      id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      home_id,
+      appliance_id: appliance_id || null,
+      user_id: user_id || 'usr_demo_1',
+      title,
+      description: description || '',
+      priority: priority || 'medium',
+      status: 'pending',
+      due_date: due_date || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const saved = db.saveMaintenanceTask(newTask);
+    res.status(201).json(saved);
+  });
+
+  app.patch('/api/maintenance/:id', (req: Request, res: Response) => {
+    const homeId = req.body.home_id || db.getHomes()[0]?.id || '';
+    const existing = db.getMaintenanceTasksByHome(homeId).find((t) => t.id === req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Maintenance task not found' });
+    const updated = db.saveMaintenanceTask({ ...existing, ...req.body });
+    res.json(updated);
+  });
+
+  app.post('/api/maintenance/:id/complete', (req: Request, res: Response) => {
+    const homeId = req.body.home_id || db.getHomes()[0]?.id || '';
+    const existing = db.getMaintenanceTasksByHome(homeId).find((t) => t.id === req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Maintenance task not found' });
+    const updated = db.saveMaintenanceTask({
+      ...existing,
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+    });
+    res.json(updated);
+  });
+
+  app.delete('/api/maintenance/:id', (req: Request, res: Response) => {
+    const deleted = db.deleteMaintenanceTask(req.params.id);
+    res.json({ success: deleted });
+  });
+
+  // --- ENERGY RECORDS ---
+  app.get('/api/energy', (req: Request, res: Response) => {
+    const homeId = (req.query.home_id || req.query.homeId) as string || db.getHomes()[0]?.id || '';
+    res.json(db.getEnergyRecords(homeId));
+  });
+
+  app.post('/api/energy', (req: Request, res: Response) => {
+    const { home_id, appliance_id, appliance_name, energy_consumption, user_id } = req.body;
+    if (!home_id || energy_consumption === undefined) {
+      return res.status(400).json({ error: 'home_id and energy_consumption are required' });
+    }
+    const newRecord: EnergyRecord = {
+      id: `en_${Date.now()}`,
+      home_id,
+      user_id: user_id || 'usr_demo_1',
+      appliance_id: appliance_id || null,
+      appliance_name: appliance_name || 'General Device',
+      energy_consumption: Number(energy_consumption),
+      unit: 'kWh',
+      recorded_at: new Date().toISOString(),
+    };
+    const saved = db.addEnergyRecord(newRecord);
+    res.status(201).json(saved);
+  });
+
+  // --- AI RECOMMENDATIONS ---
+  app.get('/api/ai/recommendations', (req: Request, res: Response) => {
+    const homeId = (req.query.home_id || req.query.homeId) as string;
+    res.json(db.getRecommendations(homeId));
+  });
+
+  app.post('/api/ai/recommendations/:id/status', (req: Request, res: Response) => {
+    const { status } = req.body;
+    const recs = db.getRecommendations();
+    const target = recs.find((r) => r.id === req.params.id);
+    if (!target) return res.status(404).json({ error: 'Recommendation not found' });
+    target.status = status || 'completed';
+    db.saveRecommendation(target);
+    res.json(target);
+  });
+
+  // --- HOME GENIE SMART ASSISTANT CHAT ---
+  app.post('/api/ai/home-chat', async (req: Request, res: Response) => {
+    const { message, home_id, user_id, conversation_id } = req.body;
+    if (!message) return res.status(400).json({ error: 'Message is required' });
+
+    const targetHomeId = home_id || db.getHomes()[0]?.id || 'home_villa_bengaluru';
+    const targetHome = db.getHomeById(targetHomeId);
+    const appliances = db.getAppliancesByHome(targetHomeId);
+    const tasks = db.getMaintenanceTasksByHome(targetHomeId);
+    const energy = db.getEnergyRecords(targetHomeId);
+
+    const convoId = conversation_id || 'convo_initial';
+    const history = db.getConversationMessages(convoId);
+
+    // Record user message
+    db.addMessage({
+      id: `msg_${Date.now()}_u`,
+      conversation_id: convoId,
+      user_id: user_id || 'usr_demo_1',
+      role: 'user',
+      content: message,
+      created_at: new Date().toISOString(),
+    });
+
+    const aiResponse = await processHomeGenieChat({
+      userMessage: message,
+      home: targetHome,
+      appliances,
+      maintenanceTasks: tasks,
+      energyRecords: energy,
+      conversationHistory: history.map((m) => ({ role: m.role, content: m.content })),
+    });
+
+    // Record assistant message
+    const botMsg: AIMessage = {
+      id: `msg_${Date.now()}_a`,
+      conversation_id: convoId,
+      user_id: user_id || 'usr_demo_1',
+      role: 'assistant',
+      content: aiResponse.reply,
+      metadata: {
+        suggestedActions: aiResponse.suggestedActions,
+        referencedAppliances: aiResponse.referencedAppliances,
+      },
+      created_at: new Date().toISOString(),
+    };
+    db.addMessage(botMsg);
+
+    res.json({
+      reply: aiResponse.reply,
+      suggestedActions: aiResponse.suggestedActions,
+      messageId: botMsg.id,
+      conversationId: convoId,
+    });
+  });
+
+  // --- VISION SCAN (IMAGE ANALYSIS) ---
+  app.post('/api/ai/vision-scan', async (req: Request, res: Response) => {
+    const { imageBase64, mimeType } = req.body;
+    if (!imageBase64) {
+      return res.status(400).json({ error: 'imageBase64 is required' });
+    }
+    const result = await processApplianceImageAnalysis(imageBase64, mimeType || 'image/jpeg');
+    res.json(result);
+  });
+
+  // --- DASHBOARD OVERVIEW STATS ---
+  app.get('/api/stats/dashboard', (req: Request, res: Response) => {
+    const homeId = (req.query.home_id || req.query.homeId) as string || db.getHomes()[0]?.id || '';
+    const homes = db.getHomes();
+    const rooms = db.getRoomsByHome(homeId);
+    const appliances = db.getAppliancesByHome(homeId);
+    const tasks = db.getMaintenanceTasksByHome(homeId);
+    const recs = db.getRecommendations(homeId);
+    const energy = db.getEnergyRecords(homeId);
+
+    const pendingTasks = tasks.filter((t) => t.status !== 'completed');
+    const activeWarranties = appliances.filter((a) => a.warranty_status === 'active');
+    const expiringWarranties = appliances.filter((a) => a.warranty_status === 'expiring_soon');
+    const totalKwh = energy.reduce((sum, e) => sum + (Number(e.energy_consumption) || 0), 0);
+
+    res.json({
+      totalHomes: homes.length,
+      totalRooms: rooms.length,
+      totalAppliances: appliances.length,
+      pendingTasksCount: pendingTasks.length,
+      activeWarrantiesCount: activeWarranties.length,
+      expiringWarrantiesCount: expiringWarranties.length,
+      monthlyEstimatedKwh: Number((totalKwh * 4.2).toFixed(1)),
+      recommendationsCount: recs.filter((r) => r.status === 'new').length,
+    });
+  });
+
+  // Upload endpoint
+  app.post('/api/upload', (req: Request, res: Response) => {
+    res.json({
+      success: true,
+      fileUrl: '/uploads/sample_plan.png',
+      message: 'Plan uploaded successfully. AI Vision scanner ready.',
+    });
   });
 
   // Vite middleware setup

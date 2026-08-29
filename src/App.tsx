@@ -4,6 +4,7 @@ import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
 import { DashboardPage } from './pages/DashboardPage';
 import { WorkspacePage } from './pages/WorkspacePage';
+import { SmartHomePage } from './pages/SmartHomePage';
 import { MaterialsComparisonView } from './components/MaterialsComparisonView';
 import { CreateProjectWizard } from './components/CreateProjectWizard';
 import { AuthModal } from './components/AuthModal';
@@ -14,7 +15,7 @@ import { api } from './services/api';
 
 export default function App() {
   // Navigation View State
-  const [currentView, setCurrentView] = useState<'home' | 'dashboard' | 'workspace' | 'materials'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'dashboard' | 'workspace' | 'materials' | 'smarthome'>('home');
 
   // Application Data State
   const [projects, setProjects] = useState<Project[]>([]);
@@ -151,6 +152,12 @@ export default function App() {
         {currentView === 'materials' && (
           <div className="py-2">
             <MaterialsComparisonView />
+          </div>
+        )}
+
+        {currentView === 'smarthome' && (
+          <div className="py-2">
+            <SmartHomePage onStartNewPlan={() => setIsWizardOpen(true)} />
           </div>
         )}
       </main>
