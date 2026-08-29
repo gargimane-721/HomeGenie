@@ -32,9 +32,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </div>
               <span className="text-2xl font-bold tracking-tight text-gray-900 font-heading">HomeGenie</span>
             </div>
-            <p className="text-xs leading-relaxed text-gray-900 max-w-sm font-medium">
-              The intelligent AI-driven residential house-planning, CAD drafting, Vastu Shastra analysis, and budget
-              intelligence platform for modern homeowners and architects.
+            <p className="text-xs uppercase tracking-wider text-gray-900 font-bold">
+              AI-Powered Architectural & Smart Home Engine
+            </p>
+            <p className="text-xs leading-relaxed text-gray-700 max-w-sm font-medium">
+              The intelligent AI-driven residential house-planning, CAD drafting, Vastu Shastra analysis, budget intelligence, and smart home automation platform for modern homeowners and architects.
             </p>
             <div className="flex items-center gap-2 text-xs text-gray-900 font-mono font-semibold">
               <ShieldCheck className="h-4 w-4 text-gray-900" />

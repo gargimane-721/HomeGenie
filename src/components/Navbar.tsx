@@ -37,11 +37,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold tracking-tight text-gray-900 font-heading">HomeGenie</span>
-                <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-900 border border-gray-300">
-                  AI Architecture
-                </span>
               </div>
-              <p className="text-[10px] uppercase tracking-widest text-gray-900 font-bold">Architectural & Smart Home Engine</p>
+              <p className="text-[10px] uppercase tracking-widest text-gray-900 font-bold">AI-Powered Architectural & Smart Home Engine</p>
             </div>
           </button>
 

@@ -20,6 +20,7 @@ import { BudgetBreakdownModal } from '../components/BudgetBreakdownModal';
 import { ProjectReportModal } from '../components/ProjectReportModal';
 import { AiModificationChat } from '../components/AiModificationChat';
 import { MaterialsComparisonView } from '../components/MaterialsComparisonView';
+import { analyzeProjectVastu } from '../engine/vastuEngine';
 import { api } from '../services/api';
 
 interface WorkspacePageProps {
@@ -265,9 +266,15 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({
           )}
 
           {/* 8-Zone Vastu Shastra Mode */}
-          {viewMode === 'vastu' && project.vastuReport && (
+          {viewMode === 'vastu' && (
             <VastuVisualizer
-              vastuReport={project.vastuReport}
+              vastuReport={
+                project.vastuReport ||
+                analyzeProjectVastu(
+                  project.floors?.flatMap((f) => f.rooms) || [],
+                  project.plot
+                )
+              }
               onApplyImprovements={handleApplyVastuImprovements}
               onHighlightZone={(zone) => {
                 console.log('Highlighted zone:', zone);
