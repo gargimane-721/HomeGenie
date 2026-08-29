@@ -25,6 +25,7 @@ export default function App() {
 
   // Modals
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
+  const [wizardConfig, setWizardConfig] = useState<any>(undefined);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
 
@@ -62,8 +63,16 @@ export default function App() {
     }
   };
 
+  const handleStartNewPlan = (config?: any) => {
+    setWizardConfig(config);
+    setIsWizardOpen(true);
+  };
+
   const handleProjectCreated = (newProject: Project) => {
-    setProjects((prev) => [newProject, ...prev]);
+    setProjects((prev) => {
+      const filtered = prev.filter((p) => p.id !== newProject.id);
+      return [newProject, ...filtered];
+    });
     setCurrentProject(newProject);
     setCurrentView('workspace');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -106,13 +115,13 @@ export default function App() {
         currentView={currentView}
         onNavigate={(view) => {
           if (view === 'wizard') {
-            setIsWizardOpen(true);
+            handleStartNewPlan();
           } else {
             setCurrentView(view);
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }
         }}
-        onStartNewPlan={() => setIsWizardOpen(true)}
+        onStartNewPlan={() => handleStartNewPlan()}
         user={currentUser}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onOpenProfile={() => setIsProfileModalOpen(true)}
@@ -122,11 +131,11 @@ export default function App() {
       <main className="relative z-10 flex-1 mx-auto w-full max-w-7xl px-4 sm:px-8 lg:px-12 pt-8 sm:pt-12 pb-24">
         {currentView === 'home' && (
           <HomePage
-            onStartNewProject={() => setIsWizardOpen(true)}
+            onStartNewProject={(config) => handleStartNewPlan(config)}
             onExploreProjects={() => setCurrentView('dashboard')}
             onOpenSampleProject={handleOpenProject}
             onNavigate={(v) => {
-              if (v === 'wizard') setIsWizardOpen(true);
+              if (v === 'wizard') handleStartNewPlan();
               else setCurrentView(v);
             }}
           />
@@ -136,7 +145,7 @@ export default function App() {
           <DashboardPage
             projects={projects}
             onOpenProject={handleOpenProject}
-            onCreateNewProject={() => setIsWizardOpen(true)}
+            onCreateNewProject={() => handleStartNewPlan()}
             onDeleteProject={handleDeleteProject}
           />
         )}
@@ -149,6 +158,19 @@ export default function App() {
           />
         )}
 
+        {currentView === 'workspace' && !currentProject && (
+          <div className="text-center py-20 bg-white rounded-2xl border border-gray-300 shadow-sm p-8 max-w-lg mx-auto">
+            <h3 className="font-heading text-xl font-bold text-gray-900 mb-2">No Project Selected</h3>
+            <p className="text-sm text-gray-600 mb-6">Create a new conceptual house plan or select an existing design.</p>
+            <button
+              onClick={() => handleStartNewPlan()}
+              className="rounded-lg bg-gray-900 px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-gray-800 shadow-sm"
+            >
+              Start New House Plan
+            </button>
+          </div>
+        )}
+
         {currentView === 'materials' && (
           <div className="py-2">
             <MaterialsComparisonView />
@@ -157,7 +179,7 @@ export default function App() {
 
         {currentView === 'smarthome' && (
           <div className="py-2">
-            <SmartHomePage onStartNewPlan={() => setIsWizardOpen(true)} />
+            <SmartHomePage onStartNewPlan={() => handleStartNewPlan()} />
           </div>
         )}
       </main>
@@ -165,7 +187,7 @@ export default function App() {
       {/* Global Architectural Footer */}
       <Footer
         onNavigate={(view) => {
-          if (view === 'wizard') setIsWizardOpen(true);
+          if (view === 'wizard') handleStartNewPlan();
           else setCurrentView(view);
         }}
       />
@@ -173,8 +195,12 @@ export default function App() {
       {/* Create House Plan Wizard Modal */}
       <CreateProjectWizard
         isOpen={isWizardOpen}
-        onClose={() => setIsWizardOpen(false)}
+        onClose={() => {
+          setIsWizardOpen(false);
+          setWizardConfig(undefined);
+        }}
         onProjectCreated={handleProjectCreated}
+        initialConfig={wizardConfig}
       />
 
       {/* Authentication Modal */}

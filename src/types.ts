@@ -228,8 +228,10 @@ export interface VastuItemAnalysis {
   zone: Direction;
   actualZone: Direction;
   status: 'Good' | 'Moderate' | 'Concern';
-  comment: string;
+  comment?: string;
+  description?: string;
   remedy?: string;
+  score?: number;
 }
 
 export interface VastuZoneAnalysis {
@@ -240,11 +242,12 @@ export interface VastuZoneAnalysis {
   currentRooms: string[];
   isCompliant: boolean;
   recommendations: string;
+  score?: number;
 }
 
 export interface VastuReport {
   score: number; // 0 - 100
-  rating: 'Superior' | 'Good' | 'Moderate' | 'Needs Optimization';
+  rating?: 'Superior' | 'Good' | 'Moderate' | 'Needs Optimization';
   zoneAnalysis?: {
     zone: Direction;
     rulingPlanet: string;
@@ -252,29 +255,37 @@ export interface VastuReport {
     presentRooms: string[];
     score: number;
   }[];
-  zoneDetails: VastuZoneAnalysis[];
+  zoneDetails?: VastuZoneAnalysis[];
   items: VastuItemAnalysis[];
-  suggestions: string[];
+  suggestions?: string[];
+  strengths?: string[];
+  concerns?: string[];
+  recommendations?: string[];
 }
 
 export interface CostBreakdownItem {
   category: string;
-  cost: number;
+  cost?: number;
+  amount?: number;
   percentage: number;
-  tier: QualityTier;
-  details: string;
+  tier?: QualityTier;
+  details?: string;
+  description?: string;
   reducibleAmount?: number;
   optimizationNote?: string;
+  color?: string;
 }
 
 export interface BudgetReport {
   totalEstimatedCost: number;
-  userBudget: number;
-  variance: number; // positive = under budget, negative = over budget
-  isOverBudget: boolean;
-  ratePerSqFt: number;
+  userBudget?: number;
+  variance?: number; // positive = under budget, negative = over budget
+  isOverBudget?: boolean;
+  ratePerSqFt?: number;
+  costPerSqFt?: number;
+  tier?: QualityTier;
   categories: CostBreakdownItem[];
-  savingsRecommendations: {
+  savingsRecommendations?: {
     id: string;
     title: string;
     savingsAmount: number;
@@ -282,6 +293,7 @@ export interface BudgetReport {
     description: string;
     applied: boolean;
   }[];
+  costSavingTips?: any[];
 }
 
 export interface MaterialItem {
@@ -331,11 +343,12 @@ export interface ProjectAlternative {
 
 export interface Project {
   id: string;
-  userId: string;
+  userId?: string;
   name: string;
+  description?: string;
   createdAt: string;
   updatedAt: string;
-  status: 'Draft' | 'Generated' | 'Optimized' | 'Completed';
+  status?: 'Draft' | 'Generated' | 'Optimized' | 'Completed';
   plot: PlotDetails;
   family: FamilyRequirements;
   requirements: RoomRequirements;
@@ -350,9 +363,10 @@ export interface Project {
   ventilationScore: number;
   lightingScore: number;
   overallScore: number;
-  versions: DesignVersion[];
+  versions?: DesignVersion[];
   selectedAlternative?: string;
   alternatives?: ProjectAlternative[];
+  appliedSavings?: string[];
 }
 
 // =======================================================

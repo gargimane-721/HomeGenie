@@ -15,7 +15,13 @@ import { HeroBlueprintAnimation } from '../components/HeroBlueprintAnimation';
 import { InteractivePlotDemo } from '../components/InteractivePlotDemo';
 
 interface HomePageProps {
-  onStartNewProject: () => void;
+  onStartNewProject: (config?: {
+    width?: number;
+    length?: number;
+    bedrooms?: number;
+    floors?: number;
+    budget?: number;
+  }) => void;
   onExploreProjects: () => void;
   onOpenSampleProject: (id: string) => void;
   onNavigate: (view: 'home' | 'dashboard' | 'workspace' | 'materials' | 'wizard') => void;
@@ -263,8 +269,8 @@ export const HomePage: React.FC<HomePageProps> = ({
       {/* SECTION 4: INTERACTIVE PLOT & BUDGET SIMULATION */}
       <section className="mx-auto max-w-7xl w-full">
         <InteractivePlotDemo
-          onCustomizeFullPlan={() => {
-            onStartNewProject();
+          onCustomizeFullPlan={(config) => {
+            onStartNewProject(config);
           }}
         />
       </section>

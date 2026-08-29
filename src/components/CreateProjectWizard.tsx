@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Compass,
   Sparkles,
   ArrowRight,
   ArrowLeft,
   X,
+  CheckCircle,
+  Building2,
+  Layers,
+  Ruler,
 } from 'lucide-react';
 import {
   ArchitecturalStyle,
@@ -14,6 +18,7 @@ import {
   QualityTier,
 } from '../types';
 import { api } from '../services/api';
+import { generateCompleteProject } from '../services/planGenerator';
 
 interface CreateProjectWizardProps {
   isOpen: boolean;
@@ -36,13 +41,15 @@ export const CreateProjectWizard: React.FC<CreateProjectWizardProps> = ({
 }) => {
   const [step, setStep] = useState<number>(1);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [generationStage, setGenerationStage] = useState<string>('Analyzing plot setbacks & orientation...');
+  const [generationProgress, setGenerationProgress] = useState<number>(15);
 
   // Form State
   const [projectName, setProjectName] = useState<string>('My Dream Home');
 
   // Step 1: Plot Details
-  const [plotWidth, setPlotWidth] = useState<number>(initialConfig?.width || 30);
-  const [plotLength, setPlotLength] = useState<number>(initialConfig?.length || 50);
+  const [plotWidth, setPlotWidth] = useState<number>(30);
+  const [plotLength, setPlotLength] = useState<number>(50);
   const [plotShape, setPlotShape] = useState<PlotDetails['shape']>('Rectangular');
   const [roadDirection, setRoadDirection] = useState<Direction>('North');
   const [locationCity, setLocationCity] = useState<string>('Bengaluru, Karnataka');
@@ -58,7 +65,7 @@ export const CreateProjectWizard: React.FC<CreateProjectWizardProps> = ({
   const [frequentGuests, setFrequentGuests] = useState<boolean>(true);
 
   // Step 3: Room Requirements
-  const [bedrooms, setBedrooms] = useState<number>(initialConfig?.bedrooms || 3);
+  const [bedrooms, setBedrooms] = useState<number>(3);
   const [bathrooms, setBathrooms] = useState<number>(3);
   const [poojaRoom, setPoojaRoom] = useState<boolean>(true);
   const [studyRoom, setStudyRoom] = useState<boolean>(true);
@@ -68,10 +75,10 @@ export const CreateProjectWizard: React.FC<CreateProjectWizardProps> = ({
   const [utilityRoom, setUtilityRoom] = useState<boolean>(true);
 
   // Step 4: Floors & Structure
-  const [totalFloors, setTotalFloors] = useState<number>(initialConfig?.floors || 2);
+  const [totalFloors, setTotalFloors] = useState<number>(2);
 
   // Step 5: Budget & Quality Tier
-  const [totalBudget, setTotalBudget] = useState<number>(initialConfig?.budget || 3500000);
+  const [totalBudget, setTotalBudget] = useState<number>(3500000);
   const [tier, setTier] = useState<QualityTier>('Standard');
 
   // Step 6: Architectural Style
@@ -81,7 +88,18 @@ export const CreateProjectWizard: React.FC<CreateProjectWizardProps> = ({
   const [vastuPriority, setVastuPriority] = useState<'Strict' | 'High' | 'Medium' | 'None'>('High');
   const [naturalLighting, setNaturalLighting] = useState<'Maximized' | 'Standard'>('Maximized');
   const [crossVentilation, setCrossVentilation] = useState<'Maximized' | 'Standard'>('Maximized');
-  const [accessibilityForElderly, setAccessibilityForElderly] = useState<boolean>(elderly > 0);
+  const [accessibilityForElderly, setAccessibilityForElderly] = useState<boolean>(true);
+
+  // Sync initialConfig if provided
+  useEffect(() => {
+    if (initialConfig) {
+      if (initialConfig.width) setPlotWidth(initialConfig.width);
+      if (initialConfig.length) setPlotLength(initialConfig.length);
+      if (initialConfig.bedrooms) setBedrooms(initialConfig.bedrooms);
+      if (initialConfig.floors) setTotalFloors(initialConfig.floors);
+      if (initialConfig.budget) setTotalBudget(initialConfig.budget);
+    }
+  }, [initialConfig, isOpen]);
 
   if (!isOpen) return null;
 
@@ -97,72 +115,109 @@ export const CreateProjectWizard: React.FC<CreateProjectWizardProps> = ({
 
   const handleGenerate = async () => {
     setIsGenerating(true);
-    try {
-      const newProject = await api.createProject({
-        name: projectName || `${plotWidth}x${plotLength} ${style} Villa`,
-        plot: {
-          width: plotWidth,
-          length: plotLength,
-          totalArea: totalPlotArea,
-          shape: plotShape,
-          roadDirection,
-          northDirection: roadDirection === 'North' ? 0 : roadDirection === 'East' ? 90 : roadDirection === 'South' ? 180 : 270,
-          location: locationCity,
-          setbacks: {
-            front: setbackFront,
-            rear: setbackRear,
-            left: setbackSides,
-            right: setbackSides,
-          },
-        },
-        family: {
-          totalMembers,
-          adults,
-          children,
-          elderly,
-          frequentGuests,
-        },
-        requirements: {
-          bedrooms,
-          masterBedrooms: 1,
-          childrenRooms: children > 0 ? 1 : 0,
-          guestRooms: frequentGuests ? 1 : 0,
-          bathrooms,
-          attachedBaths: Math.min(bathrooms, 2),
-          kitchen: true,
-          livingRoom: true,
-          diningRoom: true,
-          studyRoom,
-          poojaRoom,
-          storeRoom: true,
-          utilityRoom,
-          balconies,
-          terrace: true,
-          garden,
-          parkingBays,
-          servantQuarter: false,
-        },
-        budget: {
-          totalBudget,
-        },
-        style,
-        preferences: {
-          vastuPriority,
-          naturalLighting,
-          crossVentilation,
-          privacyLevel: 'High',
-          accessibilityForElderly,
-          futureExpansionReady: true,
-        },
-        totalFloors,
-      });
+    setGenerationStage('Analyzing plot setbacks & road orientation...');
+    setGenerationProgress(20);
 
-      onProjectCreated(newProject);
-      onClose();
+    const projectPayload: Partial<Project> = {
+      name: projectName || `${plotWidth}x${plotLength} ${style} Villa`,
+      plot: {
+        width: plotWidth,
+        length: plotLength,
+        totalArea: totalPlotArea,
+        shape: plotShape,
+        roadDirection,
+        northDirection: roadDirection === 'North' ? 0 : roadDirection === 'East' ? 90 : roadDirection === 'South' ? 180 : 270,
+        location: locationCity,
+        setbacks: {
+          front: setbackFront,
+          rear: setbackRear,
+          left: setbackSides,
+          right: setbackSides,
+        },
+      },
+      family: {
+        totalMembers,
+        adults,
+        children,
+        elderly,
+        frequentGuests,
+      },
+      requirements: {
+        bedrooms,
+        masterBedrooms: 1,
+        childrenRooms: children > 0 ? 1 : 0,
+        guestRooms: frequentGuests ? 1 : 0,
+        bathrooms,
+        attachedBaths: Math.min(bathrooms, 2),
+        kitchen: true,
+        livingRoom: true,
+        diningRoom: true,
+        studyRoom,
+        poojaRoom,
+        storeRoom: true,
+        utilityRoom,
+        balconies,
+        terrace: true,
+        garden,
+        parkingBays,
+        servantQuarter: false,
+      },
+      budget: {
+        totalBudget,
+      },
+      style,
+      preferences: {
+        vastuPriority,
+        naturalLighting,
+        crossVentilation,
+        privacyLevel: 'High',
+        accessibilityForElderly,
+        futureExpansionReady: true,
+      },
+      totalFloors,
+    };
+
+    // Animate generation steps to give realistic CAD synthesis feedback
+    const timer1 = setTimeout(() => {
+      setGenerationStage('Synthesizing 2D CAD spatial layout & furniture placement...');
+      setGenerationProgress(50);
+    }, 400);
+
+    const timer2 = setTimeout(() => {
+      setGenerationStage('Optimizing 8-zone Vastu alignment & light corridors...');
+      setGenerationProgress(75);
+    }, 800);
+
+    const timer3 = setTimeout(() => {
+      setGenerationStage('Building 3D structural model & itemized cost estimates...');
+      setGenerationProgress(95);
+    }, 1200);
+
+    try {
+      // Create project with API (which will use backend or guaranteed client engine)
+      const newProject = await api.createProject(projectPayload);
+
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      setGenerationProgress(100);
+      setGenerationStage('Conceptual house plan generated successfully!');
+
+      setTimeout(() => {
+        setIsGenerating(false);
+        onProjectCreated(newProject);
+        onClose();
+      }, 300);
     } catch (err) {
-      console.error('Failed to generate project:', err);
-    } finally {
+      console.warn('API error during generation, activating deterministic client CAD engine:', err);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      
+      const fallbackProject = generateCompleteProject(projectPayload);
       setIsGenerating(false);
+      onProjectCreated(fallbackProject);
+      onClose();
     }
   };
 
@@ -203,7 +258,40 @@ export const CreateProjectWizard: React.FC<CreateProjectWizardProps> = ({
         </div>
 
         {/* Wizard Step Body */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 bg-white">
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8 bg-white relative">
+          {/* Active Generation Synthesis Overlay */}
+          {isGenerating && (
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-white/95 backdrop-blur-md p-8 text-center animate-in fade-in">
+              <div className="relative mb-6">
+                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gray-900 text-white shadow-xl">
+                  <Sparkles className="h-10 w-10 animate-spin text-amber-400" />
+                </div>
+                <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white shadow-md">
+                  <CheckCircle className="h-5 w-5" />
+                </div>
+              </div>
+
+              <h4 className="font-heading text-2xl font-bold text-gray-900 mb-2">
+                Synthesizing Conceptual House Plan
+              </h4>
+              <p className="text-sm font-medium text-gray-600 max-w-md mb-6 leading-relaxed">
+                {generationStage}
+              </p>
+
+              {/* Progress bar */}
+              <div className="w-full max-w-md bg-gray-200 rounded-full h-3 mb-3 overflow-hidden border border-gray-300">
+                <div
+                  className="bg-gray-900 h-full rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${generationProgress}%` }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between w-full max-w-md text-xs font-mono text-gray-500 font-bold">
+                <span>PARAMETRIC CAD SYNTHESIS</span>
+                <span>{generationProgress}%</span>
+              </div>
+            </div>
+          )}
           {/* STEP 1: Plot Details */}
           {step === 1 && (
             <div className="space-y-5 animate-in fade-in">
